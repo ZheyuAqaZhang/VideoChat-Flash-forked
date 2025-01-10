@@ -71,7 +71,12 @@ We build a diver instruction data with **2M** samples from 34 distince sources. 
 
 If you find this project useful in your research, please consider cite:
 ```BibTeX
-
+@article{li2024videochat,
+  title={VideoChat-Flash: Hierarchical Compression for Long-Context Video Modeling},
+  author={Li, Xinhao and Wang, Yi and Yu, Jiashuo and Zeng, Xiangyu and Zhu, Yuhan and Huang, Haian and Gao, Jianfei and Li, Kunchang and He, Yinan and Wang, Chenting and others},
+  journal={arXiv preprint arXiv:2501.00574},
+  year={2024}
+}
 ```
 
 # :dizzy: Acknowledgement
