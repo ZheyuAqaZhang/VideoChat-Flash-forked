@@ -4,7 +4,7 @@
 <br><br> -->
 
 <div align="center"
-<h2><a href="https://internvideo.github.io/blog/2024-12-31-VideoChat-Flash><b>VideoChat-Flash: Hierarchical Compression for Long-Context Video Modeling</b></a></h2>
+<h2><a href="https://internvideo.github.io/blog/2024-12-31-VideoChat-Flash" ><b>VideoChat-Flash: Hierarchical Compression for Long-Context Video Modeling</b></a></h2>
 
 [Xinhao Li](https://scholar.google.com/citations?user=evR3uR0AAAAJ&hl=zh-CN), [Yi Wang](https://scholar.google.com.hk/citations?hl=zh-CN&user=Xm2M8UwAAAAJ), [Jiashuo Yu](https://scholar.google.com.hk/citations?user=iH0Aq0YAAAAJ&hl=zh-CN&oi=ao), Xiangyu Zeng, Yuhan Zhu, Haian Huang, Jianfei Gao, [Kunchang Li](https://scholar.google.com/citations?user=D4tLSbsAAAAJ), [Yinan He](https://dblp.org/pid/93/7763.html), Chenting Wang, [Yu Qiao](https://scholar.google.com/citations?user=gFtI-8QAAAAJ&hl), [Yali Wang](https://scholar.google.com/citations?user=hD948dkAAAAJ), and [Limin Wang](https://scholar.google.com/citations?user=HEuN8PcAAAAJ)
 
