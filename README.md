@@ -26,10 +26,11 @@
 - [x] **2025/01/12**: 🔥🔥🔥Release **VideoChat2-Flash**, a powerfull MLLM built on video encoder ([UMT](https://github.com/OpenGVLab/unmasked_teacher)) and LLM ([Qwen](https://github.com/QwenLM/Qwen)).
     - We offer three models, [VideoChat2-Flash-2B@224](https://huggingface.co/OpenGVLab/VideoChat-Flash-Qwen2_5-2B_res448), [VideoChat2-Flash-7B@224](https://huggingface.co/OpenGVLab/VideoChat-Flash-Qwen2-7B_res224) and  [VideoChat2-Flash-7B@448](https://huggingface.co/OpenGVLab/VideoChat-Flash-Qwen2-7B_res448).
     <!-- - We provide [online demos]() and demo codes that can be run locally. -->
-
+- [x] **2025/01/15**: We provide [evaluation codes](lmms-eval_videochat) for QA & Grounding Benchmark.
+- [ ] Dataset and training codes.
 - [ ] Dataset and evaluation codes for single-hop and multi-hop needle-in-a-haystack;
     <!-- -  We also provide the evaluation codes for various benchmarks, which are constructed based on [lmms-eval](https://github.com/EvolvingLMMs-Lab/lmms-eval). -->
-- [ ] Dataset and training codes.
+
 
 ## :parrot: Introduction
 
