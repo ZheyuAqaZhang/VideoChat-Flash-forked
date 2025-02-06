@@ -4,11 +4,11 @@ dataset_kwargs:
   cache_dir: your_eval_data_dir/VideoMME_0629
   video: True
   # From_YouTube: True
-task: videomme_
+task: videomme
 test_split: test
 output_type: generate_until
 doc_to_visual: !function utils.videomme_doc_to_visual
-doc_to_text: !function utils.videomme_doc_to_text_vc
+doc_to_text: !function utils.videomme_doc_to_text
 doc_to_target: "answer"
 generation_kwargs:
   max_new_tokens: 16
