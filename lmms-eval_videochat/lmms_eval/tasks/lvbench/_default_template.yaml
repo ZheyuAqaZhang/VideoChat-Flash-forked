@@ -13,7 +13,7 @@ generation_kwargs:
 
 output_type: generate_until
 doc_to_visual: !function utils.lvbench_mc_doc_to_visual
-doc_to_text: !function utils.lvbench_mc_doc_to_text_vc
+doc_to_text: !function utils.lvbench_mc_doc_to_text
 doc_to_target: "answer"
 # The return value of process_results will be used by metrics
 process_results: !function utils.lvbench_mc_process_results
