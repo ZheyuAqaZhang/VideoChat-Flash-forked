@@ -12,6 +12,7 @@ In [data](.data), we have provided the data used in each training stage, along w
 
 ## 2. Training
 
+
 | Stage | Num. frames | ViT | Connector | LLM |
 |--------|:-------:|:------:|:------:|:------:|
 | [stage1](scripts/train/stage1-init_connector) | 4 | :snowflake: | :fire: | :snowflake: | 
@@ -19,7 +20,13 @@ In [data](.data), we have provided the data used in each training stage, along w
 | [stage3](scripts/train/stage3-video_sft) | 64-512 | :fire: | :fire: | :fire: |
 | [stage4](scripts/train/stage4_highres_postft) | 64-512 | :fire: | :fire: | :snowflake: | 
 
+### Install
 
+```bash
+git clone https://github.com/OpenGVLab/VideoChat-Flash
+cd llava-train_videochat
+pip install -e .
+```
 
 ### Stage-1: Video-Language Alignment
 
