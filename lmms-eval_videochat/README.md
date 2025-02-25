@@ -62,4 +62,4 @@ accelerate launch --num_processes ${NUM_GPUS} --main_process_port ${MASTER_PORT}
     --log_samples_suffix $TASK_SUFFIX \
     --output_path ./logs/${JOB_NAME}_${MODEL_NAME}_f${MAX_NUM_FRAMES}
 ```
-We provide our [evaluation log](https://github.com/OpenGVLab/VideoChat-Flash/blob/main/lmms-eval_videochat/videochat-flash-7B%40448_eval_log_videomme.json) for your reproducibility.
+We provide our [evaluation log](https://github.com/OpenGVLab/VideoChat-Flash/blob/main/lmms-eval_videochat/videochat-flash-7B%40448_eval_log_videomme.json) of videomme for your reproducibility.
