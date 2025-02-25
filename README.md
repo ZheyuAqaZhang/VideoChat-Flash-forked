@@ -14,8 +14,6 @@
 
 
 
-
-
 </div>
 
 
@@ -47,7 +45,7 @@
 
 ## Demo & Inference
 
-TBD
+Refer to [hf README](https://huggingface.co/OpenGVLab/VideoChat-Flash-Qwen2_5-2B_res448) to inference our model.
 
 ## Evaluation
 
