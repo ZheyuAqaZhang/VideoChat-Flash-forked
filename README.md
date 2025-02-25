@@ -21,13 +21,14 @@
 
 
 ## :fire: Updates
+- [x] **2025/02/12**:🔥🔥🔥 We release [training codes based LLaVA](llava-train_videochat) and training data.
 - [x] **2025/02/12**: 🎉🎉🎉Our VideoChat-Flash-7B@448 has achieved first place on the latest Video Detail Caption Benchmark, [AuroraCap](https://rese1f.github.io/aurora-web/).
 - [x] **2025/01/15**: We provide [evaluation codes](lmms-eval_videochat) for QA & Grounding Benchmark.
 - [x] **2025/01/12**: 🔥🔥🔥Release **VideoChat2-Flash**, a powerfull MLLM built on video encoder ([InternVideo](https://github.com/OpenGVLab/InternVideo)) and LLM ([Qwen](https://github.com/QwenLM/Qwen)).
     - We offer five models, [VideoChat2-Flash-2B@224](https://huggingface.co/OpenGVLab/VideoChat-Flash-Qwen2_5-2B_res448) (Small LLM), [VideoChat2-Flash-7B@224](https://huggingface.co/OpenGVLab/VideoChat-Flash-Qwen2-7B_res224), [VideoChat2-Flash-7B@448](https://huggingface.co/OpenGVLab/VideoChat-Flash-Qwen2-7B_res448) (Overall best), [VideoChat-Flash-Qwen2_5-7B-1M](https://huggingface.co/OpenGVLab/VideoChat-Flash-Qwen2_5-7B-1M_res224) (Super long video input) and [VideoChat-Flash-Qwen2_5-7B_InternVideo2-1B](https://huggingface.co/OpenGVLab/VideoChat-Flash-Qwen2_5-7B_InternVideo2-1B) (Stronger short-term temporal understanding).
     <!-- - We provide [online demos]() and demo codes that can be run locally. -->
 
-- [ ] Dataset and training codes.
+- [ ] Training code based XTuner.
 - [ ] Dataset and evaluation codes for single-hop and multi-hop needle-in-a-haystack;
     <!-- -  We also provide the evaluation codes for various benchmarks, which are constructed based on [lmms-eval](https://github.com/EvolvingLMMs-Lab/lmms-eval). -->
 
@@ -46,33 +47,17 @@
 
 ## Demo & Inference
 
-
-
-
+TBD
 
 ## Evaluation
 
 
-We modify lmms-eval to eval ..
+See [evaluation codes](lmms-eval_videochat)
 
 ## Training
 
 
-### [Instruction Data](./DATA.md)
-
-<!-- We build a diver instruction data with **2M** samples from 34 distince sources. Check [DATA](./DATA.md) for more details. -->
-
-
-
-| Stage | Num. frames | ViT | Connector | LLM | Shell |
-|--------|:-------:|:------:|:------:|:------:|:------:|
-| Stage-1 | 4 | :snowflake: | :fire: | :snowflake: | TBD |
-| Stage-2 | 4-8 | :fire: | :fire: | :fire: | TBD |
-| Stage-3 | 64-512 | :fire: | :fire: | :fire: | TBD |
-| Stage-4 | 64-512 | :fire: | :fire: | :snowflake: | TBD |
-
-
-
+See [training codes based LLaVA](llava-train_videochat).
 
 
 
