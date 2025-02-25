@@ -7,6 +7,7 @@ We have modified the data loading method for lmms-eval: instead of loading from 
 
 You can install the package by cloning the repository and running the following command:
 ```bash
+git clone https://github.com/OpenGVLab/VideoChat-Flash
 cd lmms-eval_videochat
 pip install -e .
 ```
