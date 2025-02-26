@@ -50,7 +50,7 @@ Refer to [hf README](https://huggingface.co/OpenGVLab/VideoChat-Flash-Qwen2_5-2B
 ## Evaluation
 
 
-See [evaluation codes](lmms-eval_videochat)
+See [evaluation codes](lmms-eval_videochat).
 
 ## Training
 
