@@ -19,7 +19,7 @@
 
 
 ## :fire: Updates
-- [x] **2025/02/12**:🔥🔥🔥 We release [training codes based LLaVA](llava-train_videochat) and training data.
+- [x] **2025/02/25**:🔥🔥🔥 We release [training codes based LLaVA](llava-train_videochat) and training data.
 - [x] **2025/02/12**: 🎉🎉🎉Our VideoChat-Flash-7B@448 has achieved first place on the latest Video Detail Caption Benchmark, [AuroraCap](https://rese1f.github.io/aurora-web/).
 - [x] **2025/01/15**: We provide [evaluation codes](lmms-eval_videochat) for QA & Grounding Benchmark.
 - [x] **2025/01/12**: 🔥🔥🔥Release **VideoChat2-Flash**, a powerfull MLLM built on video encoder ([InternVideo](https://github.com/OpenGVLab/InternVideo)) and LLM ([Qwen](https://github.com/QwenLM/Qwen)).
