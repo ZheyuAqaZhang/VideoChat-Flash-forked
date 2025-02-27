@@ -71,6 +71,3 @@ playground/*.json
 mlx_configs/
 data_processing/
 # demo/
-scripts/video/demo/video_demo.sh
-scripts/vid_infer.sh
-pyproject.toml
