@@ -7,7 +7,7 @@
 We need to address the fact that our data has been collected and used in different projects/people. For the data that has already been uploaded, we will refer you the corresponding viewing locations. Please collect relevant data fragments and integrate them in your own environments. We use similar data format with [LLaVA-NeXT](https://github.com/LLaVA-VL/LLaVA-NeXT/tree/main/scripts/train). ***You can customize your own training data in this format***.
 
 
-In [data](.data), we have provided the data used in each training stage, along with the corresponding annotation locations. We have made all the data annotations and some of the videos available on [OpenGVLab/VideoChat-Flash-Training-Data](https://huggingface.co/datasets/OpenGVLab/VideoChat-Flash-Training-Data).
+In [data](.data), we have provided the data used in each training stage, along with the corresponding annotation locations. We have made all the data annotations and some of the videos available on [OpenGVLab/VideoChat-Flash-Training-Data](https://huggingface.co/datasets/OpenGVLab/VideoChat-Flash-Training-Data), and I have listed all video source url in the annotation file.
 
 
 ## 2. Training
