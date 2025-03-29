@@ -1,7 +1,8 @@
 dataset_path: eval_data_jsons/MLVU_MC
 dataset_kwargs:
   token: True
-  cache_dir: your_eval_data_dir/MLVU_MC
+  # cache_dir: your_eval_data_dir/MLVU_MC
+  cache_dir: benchmark_data/MVLU/MLVU/video/
   video: True
 generation_kwargs:
   max_new_tokens: 16

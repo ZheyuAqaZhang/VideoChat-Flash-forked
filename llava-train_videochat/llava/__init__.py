@@ -1,2 +1,3 @@
-from .model import LlavaQwenForCausalLM
+from llava.model.language_model.llava_qwen import LlavaQwenForCausalLM
+import llava.model
 from .train.train import LazySupervisedDataset, DataCollatorForSupervisedDataset

@@ -345,7 +345,7 @@ class LlavaMetaForCausalLM(ABC):
         for idx in range(bs):
             
             if idx in video_idx_in_batch:
-                feat = self.get_model().mm_projector(videos_features[vid_idx], compress=True, local_num_frames=getattr(self.config, "mm_local_num_frames", -1))
+                feat = self.get_model().mm_projector(videos_features[vid_idx], compress=True, local_num_frames=getattr(self.config, "mm_local_num_frames", -1), condenser=self.condenser)
                 
                 vid_idx += 1
             else:
@@ -650,15 +650,24 @@ class LlavaMetaForCausalLM(ABC):
         new_labels = []
         cur_image_idx = 0
 
-        mm_llm_compress = getattr(self.config, "mm_llm_compress", False)
+        # mm_llm_compress = getattr(self.config, "mm_llm_compress", False)
+        import os
+        mm_llm_compress = True
         
         if mm_llm_compress:
-            self.model.llm_compress_type = getattr(self.config, "llm_compress_type", "attention")
-            self.model.llm_compress_layer_list = getattr(self.config, "llm_compress_layer_list", [8, 16, 24])
-            self.model.llm_image_token_ratio_list = getattr(self.config, "llm_image_token_ratio_list", [1.0, 0.5, 0.25, 0.125])
+            # self.model.llm_compress_type = getattr(self.config, "llm_compress_type", "attention")
+            self.model.llm_compress_type = "uniform"
+            # self.model.llm_compress_layer_list = getattr(self.config, "llm_compress_layer_list", [8, 16, 24])
+            self.model.llm_compress_layer_list = eval(os.environ.get("EXTRA_PARAM_INNER_CONDENSER_ID", "[]"))
+            # self.model.llm_image_token_ratio_list = getattr(self.config, "llm_image_token_ratio_list", [1.0, 0.5, 0.25, 0.125])
+            self.model.llm_image_token_ratio_list = [1.]
+            inner_stride = int(os.environ.get("EXTRA_PARAM_INNER_STRIDE", 1))
+            for o in self.model.llm_compress_layer_list:
+                self.model.llm_image_token_ratio_list.append(self.model.llm_image_token_ratio_list[-1] / inner_stride)
             first_image_token_position = []
             text_prompt_lens = []
         else:
+            assert False, "Ciallo~ (∠・ω< )⌒☆"
             self.model.llm_compress_type = "attention"
             self.model.llm_compress_layer_list = []
             self.model.llm_image_token_ratio_list = []
@@ -796,6 +805,9 @@ class LlavaMetaForCausalLM(ABC):
             position_ids[:, split_position:] += right_add
         # import pdb; pdb.set_trace()
         # print("Finish preparing")
+
+        # print("Input shape:", new_input_embeds.shape)
+
         return None, position_ids, attention_mask, past_key_values, new_input_embeds, new_labels
 
     def initialize_vision_tokenizer(self, model_args, tokenizer):

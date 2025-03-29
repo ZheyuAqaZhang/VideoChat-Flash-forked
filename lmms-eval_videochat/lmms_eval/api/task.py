@@ -721,6 +721,9 @@ class ConfigurableTask(Task):
         download_config.max_retries = dataset_kwargs.get("max_retries", 10) if dataset_kwargs is not None else 10
         download_config.num_proc = dataset_kwargs.get("num_proc", 8) if dataset_kwargs is not None else 8
         download_config.local_files_only = dataset_kwargs.get("local_files_only", True) if dataset_kwargs is not None else True # NOTE 默认用本地
+        # download_config.local_files_only = dataset_kwargs.get("local_files_only", False) if dataset_kwargs is not None else False
+        # import pdb; pdb.set_trace()
+
         if dataset_kwargs is not None: # NOTE lxh
             if "From_YouTube" in dataset_kwargs:
                 raise NotImplementedError("I don't want it!")
@@ -792,6 +795,7 @@ class ConfigurableTask(Task):
                     if accelerator.is_main_process:
                         force_download = dataset_kwargs.get("force_download", False)
                         force_unzip = dataset_kwargs.get("force_unzip", False)
+                        import pdb; pdb.set_trace()
                         cache_path = snapshot_download(repo_id=self.DATASET_PATH, repo_type="dataset", force_download=force_download, etag_timeout=60)
                         zip_files = glob(os.path.join(cache_path, "**/*.zip"), recursive=True)
                         tar_files = glob(os.path.join(cache_path, "**/*.tar*"), recursive=True)

@@ -109,7 +109,7 @@ def build_vit(config, pt_type='origin'):
     )
     
 
-    ckpt_path = "OpenGVLab/Video_Encoders_for_Training_VideoChat-Flash/UMT-L_f4_vision.pt"
+    ckpt_path = "/home/ec2-user/workspace/nvme/coding/Video_Encoders_for_Training_VideoChat-Flash/UMT-L_f4_vision.pt"
 
     if not os.path.isfile(ckpt_path):
         raise NotImplementedError("Please download https://huggingface.co/OpenGVLab/Video_Encoders_for_Training_VideoChat-Flash/UMT-L_f4_vision.pt")

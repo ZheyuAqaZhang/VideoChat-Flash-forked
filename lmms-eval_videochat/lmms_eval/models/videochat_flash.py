@@ -257,6 +257,88 @@ class VideoChat_Flash(lmms):
                     question_input.append(context)
 
                     try:
+                        # import pdb; pdb.set_trace()
+                        # import types
+                        # from llava.mm_utils import tokenizer_image_token, KeywordsStoppingCriteria, get_anyres_image_grid_shape, load_video
+                        
+                        # @torch.no_grad()
+                        # def chat_patch(self,
+                        #     video_path,
+                        #     tokenizer,
+                        #     user_prompt,
+                        #     chat_history=None,
+                        #     return_history=True,
+                        #     max_num_frames=512,
+                        #     media_dict=None,
+                        #     generation_config={}):
+
+                        #     frames, time_msg  = load_video(video_path, max_num_frames=max_num_frames, media_dict=media_dict)
+
+                        #     image_sizes = [frames[0].shape[:2]]
+
+                        #     frames = [self.get_vision_tower().image_processor.preprocess(frames, return_tensors="pt")["pixel_values"].to(self.model.dtype).cuda()]
+
+                        #     conv = conv_templates["qwen_2"].copy()
+
+                        #     if chat_history is None or len(chat_history) == 0:
+                        #         user_prompt = f'{DEFAULT_IMAGE_TOKEN}\n{time_msg.strip()} {user_prompt}'
+                        #     else:
+                        #         assert DEFAULT_IMAGE_TOKEN in chat_history[0]['content'], chat_history
+                        #         for msg in chat_history:
+                        #             conv.append_message(msg['role'], msg['content'])
+                            
+                        #     conv.append_message(conv.roles[0], user_prompt)
+                        #     conv.append_message(conv.roles[1], None)
+
+                        #     prompt = conv.get_prompt()
+
+                        #     input_ids = tokenizer_image_token(prompt, tokenizer, IMAGE_TOKEN_INDEX, return_tensors="pt").unsqueeze(0).cuda()
+
+                        #     if tokenizer.pad_token_id is None:
+                        #         if "qwen" in tokenizer.name_or_path.lower():
+                        #             print("Setting pad token to bos token for qwen model.")
+                        #             tokenizer.pad_token_id = 151643
+
+                        #     attention_masks = input_ids.ne(tokenizer.pad_token_id).long().cuda()
+
+                        #     stop_str = conv.sep if conv.sep_style != SeparatorStyle.TWO else conv.sep2
+                        #     keywords = [stop_str]
+                        #     stopping_criteria = KeywordsStoppingCriteria(keywords, tokenizer, input_ids)
+                            
+                        #     with torch.inference_mode():
+                        #         output_ids = self.generate(
+                        #             inputs=input_ids,
+                        #             images=frames,
+                        #             attention_mask=attention_masks,
+                        #             modalities=["video"],
+                        #             image_sizes=image_sizes,
+                        #             use_cache=True,
+                        #             stopping_criteria=[stopping_criteria],
+                        #             **generation_config
+                        #         )
+
+                        #     outputs = tokenizer.batch_decode(output_ids, skip_special_tokens=True)[0].strip()
+                        #     if outputs.endswith(stop_str):
+                        #         outputs = outputs[: -len(stop_str)]
+
+                        #     outputs = outputs.strip()
+
+                        #     # print(f"\033[91m== Question: \033[0m\n{prompt}\n")
+                        #     # print(f"\033[91m== Response: \033[0m\n{outputs}\n")
+                            
+                        #     if chat_history is None:
+                        #         chat_history = []
+
+                        #     chat_history.append({"role":conv.roles[0], "content":user_prompt})
+                        #     chat_history.append({"role":conv.roles[1], "content":outputs})
+                        #     if return_history:
+                        #         return outputs, chat_history
+                        #     else:
+                        #         return outputs
+
+                        # # 将 chat_patch 动态绑定为 self.model 的 chat 方法
+                        # self.model.chat = types.MethodType(chat_patch, self.model)
+
                         response = self.model.chat(
                                 video_path,
                                 self.tokenizer,

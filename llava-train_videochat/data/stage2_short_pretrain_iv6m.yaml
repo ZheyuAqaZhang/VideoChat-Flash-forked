@@ -1,37 +1,37 @@
 datasets:
-  - json_path: annotations/image/LLaVA-ReCap-118K.json
+  - json_path: OpenGVLab/VideoChat-Flash-Training-Data/annotations/image/LLaVA-ReCap-118K.json
     sampling_strategy: all
-    data_root: https://huggingface.co/datasets/lmms-lab/LLaVA-ReCap-118K
-  - json_path: annotations/image/LLaVA-ReCap-CC3M.json
+    data_root: OpenGVLab/stage2/LLaVA-ReCap-118K/data/extracted_images/
+  - json_path: OpenGVLab/VideoChat-Flash-Training-Data/annotations/image/LLaVA-ReCap-CC3M.json
     sampling_strategy: all
-    data_root: https://huggingface.co/datasets/lmms-lab/LLaVA-ReCap-CC3M
-  - json_path: annotations/image/LLaVA-ReCap-558K.json
+    data_root: OpenGVLab/stage2/LLaVA-ReCap-CC3M/data/extracted_images/
+  - json_path: OpenGVLab/VideoChat-Flash-Training-Data/annotations/image/LLaVA-ReCap-558K.json
     sampling_strategy: all
-    data_root: https://huggingface.co/datasets/lmms-lab/LLaVA-ReCap-558K
-  - json_path: https://huggingface.co/datasets/lmms-lab/LLaVA-OneVision-Mid-Data/tree/main/evol_instruct/evol_instruct_processed.json
+    data_root: OpenGVLab/stage2/LLaVA-ReCap-558K/data/extracted_images/
+  - json_path: OpenGVLab/stage2/LLaVA-OneVision-Mid-Data/evol_instruct/evol_instruct_processed.json
     sampling_strategy: all
-  - json_path: annotations/video/webvid-fuse_caption_2m.json
+  # - json_path: OpenGVLab/VideoChat-Flash-Training-Data/annotations/video/webvid-fuse_caption_2m.json
+  #   sampling_strategy: all
+  #   data_root: https://github.com/m-bain/webvid
+  # - json_path: OpenGVLab/VideoChat-Flash-Training-Data/annotations/video/caption_sharegemini_webvid_core100k_clean.json
+  #   sampling_strategy: all
+  #   data_root: https://github.com/m-bain/webvid
+  - json_path: OpenGVLab/VideoChat-Flash-Training-Data/annotations/video/caption_sharegemini_k400_223k.json
     sampling_strategy: all
-    data_root: https://github.com/m-bain/webvid
-  - json_path: annotations/video/caption_sharegemini_webvid_core100k_clean.json
+    data_root: OpenGVLab/stage2/OpenMMLab___Kinetics-400/raw/Kinetics-400/videos_train/
+  - json_path: OpenGVLab/VideoChat-Flash-Training-Data/annotations/image/ureader_tr_processed.json
+    data_root: OpenGVLab/stage2/LLaVA-OneVision-Mid-Data/ureader_tr/
     sampling_strategy: all
-    data_root: https://github.com/m-bain/webvid
-  - json_path: annotations/video/caption_sharegemini_k400_223k.json
+  - json_path: OpenGVLab/VideoChat-Flash-Training-Data/annotations/image/synthdog_zh_processed.json
+    data_root: OpenGVLab/stage2/LLaVA-OneVision-Mid-Data/synthdog_zh/synthdog-zh/images/
     sampling_strategy: all
-    data_root: https://opendatalab.com/OpenMMLab/Kinetics-400
-  - json_path: annotations/image/ureader_tr_processed.json
-    data_root: https://huggingface.co/datasets/lmms-lab/LLaVA-OneVision-Mid-Data/tree/main/ureader_ur/
+  - json_path: OpenGVLab/VideoChat-Flash-Training-Data/annotations/image/synthdog_en_processed.json
+    data_root: OpenGVLab/stage2/LLaVA-OneVision-Mid-Data/synthdog_en/synthdog-en/alt-images/
     sampling_strategy: all
-  - json_path: annotations/image/synthdog_zh_processed.json
-    data_root: https://huggingface.co/datasets/lmms-lab/LLaVA-OneVision-Mid-Data/tree/main/synthdog_zh/synthdog_zh_images/
+  - json_path: OpenGVLab/VideoChat-Flash-Training-Data/annotations/video/smit_caption_481k.json
     sampling_strategy: all
-  - json_path: annotations/image/synthdog_en_processed.json
-    data_root: https://huggingface.co/datasets/lmms-lab/LLaVA-OneVision-Mid-Data/tree/main/synthdog_en/synthdog_en_images/
+    data_root: OpenGVLab/smit/S-MiT/
+  - json_path: OpenGVLab/VideoChat-Flash-Training-Data/annotations/video/caption_sharegptvideo_300k-sharegptvideo-train_300k_302k.json
     sampling_strategy: all
-  - json_path: annotations/video/smit_caption_481k.json
-    sampling_strategy: all
-    data_root: http://moments.csail.mit.edu/spoken.html
-  - json_path: annotations/video/caption_sharegptvideo_300k-sharegptvideo-train_300k_302k.json
-    sampling_strategy: all
-    data_root: https://huggingface.co/datasets/ShareGPTVideo/train_video_and_instruction/tree/main/train_300k
+    data_root: OpenGVLab/train_video_and_instruction/train_300k/
     video_read_type: img

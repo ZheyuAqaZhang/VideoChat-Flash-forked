@@ -7,29 +7,26 @@ DATA_VERSION_CLEAN=$(basename "$DATA_VERSION")
 VISION_MODEL_VERSION="umt-hd-large"
 VISION_MODEL_VERSION_CLEAN="umt-hd-large"
 
-LLM_VERSION="Qwen/Qwen2_5-1.5B-Instruct"
+LLM_VERSION="Qwen/Qwen2.5-1.5B-Instruct"
 LLM_VERSION_CLEAN="Qwen2_5_1_5B"
 
 mm_projector_type=tome16_mlp_hd64
 PROMPT_VERSION=plain
 
 BASE_RUN_NAME=stage1-${VISION_MODEL_VERSION}-${mm_projector_type}-${LLM_VERSION_CLEAN}_${DATA_VERSION_CLEAN}_${PROMPT_VERSION}_$(date +"%Y%m%d_%H%M%S")
+# BASE_RUN_NAME=stage1-${VISION_MODEL_VERSION}-${mm_projector_type}-${LLM_VERSION_CLEAN}_${DATA_VERSION_CLEAN}_${PROMPT_VERSION}_
 echo "BASE_RUN_NAME: ${BASE_RUN_NAME}"
 
 
+mkdir -p ./output_logs/stage1-init_connector
+
 PARTITION='video'
 JOB_NAME=$(basename $0)_$(date +"%Y%m%d_%H%M%S")
-NUM_GPU=8
+NUM_GPU=2
 # NOTE: If you don't use slurm, please ref to https://github.com/LLaVA-VL/LLaVA-NeXT/blob/main/scripts/train/pretrain_clip.sh for training command.
-srun -p ${PARTITION} \
-    --job-name=${JOB_NAME} \
-    --ntasks=${NUM_GPU} \
-    --gres=gpu:8 \
-    --ntasks-per-node=8 \
-    --cpus-per-task=16 \
-    --kill-on-bad-exit=1 \
-    python -u llava/train/train_mem.py \
-    --deepspeed scripts/zero1.json \
+ACCELERATE_CPU_AFFINITY=1 torchrun --nproc_per_node=${NUM_GPU} \
+    llava/train/train_mem.py \
+    --deepspeed scripts/zero2.json \
     --model_name_or_path ${LLM_VERSION} \
     --version ${PROMPT_VERSION} \
     --data_path ${DATA_VERSION} \
@@ -47,7 +44,7 @@ srun -p ${PARTITION} \
     --gradient_accumulation_steps 4 \
     --evaluation_strategy "no" \
     --save_strategy "no" \
-    --save_steps 50000 \
+    --save_steps 1000 \
     --learning_rate 1e-3 \
     --weight_decay 0. \
     --warmup_ratio 0.03 \

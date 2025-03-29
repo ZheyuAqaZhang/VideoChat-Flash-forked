@@ -55,6 +55,20 @@ class LlavaQwenForCausalLM_Flash(Qwen2ForCausalLM_Flash, LlavaMetaForCausalLM):
         self.model = LlavaQwenModel_Flash(config)
         self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
         # Initialize weights and apply final processing
+
+        # import pdb; pdb.set_trace()
+        import os 
+        OUTER_CONDENSER = os.environ.get('EXTRA_PARAM_OUTER_CONDENSER_TYPE', None)
+        OUTER_LAYERS = int(os.environ.get('EXTRA_PARAM_OUTER_LAYERS', '0'))
+        INNER_CONDENSER = os.environ.get('EXTRA_PARAM_INNER_CONDENSER_TYPE', None)
+        INNER_LAYERS = int(os.environ.get('EXTRA_PARAM_INNER_LAYERS', '0'))
+        print("It is LlavaQwenForCausalLM_Flash")
+        print("OUTER_CONDENSER:", OUTER_CONDENSER)
+        print("OUTER_LAYERS:", OUTER_LAYERS)
+        print("INNER_CONDENSER:", INNER_CONDENSER)
+        print("INNER_LAYERS:", INNER_LAYERS)
+
+
         self.post_init()
 
     def get_model(self):

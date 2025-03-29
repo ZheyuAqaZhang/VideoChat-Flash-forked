@@ -3,13 +3,13 @@ export DISABLE_ADDMM_CUDA_LT=1
 export TORCH_CUDNN_USE_HEURISTIC_MODE_B=1
 
 
-DATA_VERSION="data/stage2_short_pretrain_iv6m.yaml"
+DATA_VERSION="data/stage2_short_pretrain_iv6m_small.yaml"
 DATA_VERSION_CLEAN=$(basename "$DATA_VERSION")
 
 VISION_MODEL_VERSION="umt-hd-large"
 VISION_MODEL_VERSION_CLEAN="umt-hd-large"
 
-LLM_VERSION="Qwen/Qwen2_5-1.5B-Instruct"
+LLM_VERSION="Qwen/Qwen2.5-1.5B-Instruct"
 LLM_VERSION_CLEAN="Qwen2_5_1_5B"
 
 mm_projector_type=tome16_mlp_hd64
@@ -22,22 +22,28 @@ echo "MID_RUN_NAME: ${MID_RUN_NAME}"
 PARTITION='video'
 JOB_NAME=$(basename $0)_$(date +"%Y%m%d_%H%M%S")
 
-NUM_GPU=32
+mkdir -p ./output_logs/stage2-visual_pretraining/
+
+NUM_GPU=4
 # NOTE: If you don't use slurm, please ref to https://github.com/LLaVA-VL/LLaVA-NeXT/blob/main/scripts/train/pretrain_clip.sh for training command.
-srun -p ${PARTITION} \
-    --job-name=${JOB_NAME} \
-    --ntasks=${NUM_GPU} \
-    --gres=gpu:8 \
-    --ntasks-per-node=8 \
-    --cpus-per-task=16 \
-    --kill-on-bad-exit=1 \
-    python -u llava/train/train_mem.py \
-    --deepspeed scripts/zero1.json \
+# srun -p ${PARTITION} \
+#     --job-name=${JOB_NAME} \
+#     --ntasks=${NUM_GPU} \
+#     --gres=gpu:8 \
+#     --ntasks-per-node=8 \
+#     --cpus-per-task=16 \
+#     --kill-on-bad-exit=1 \
+#     python -u llava/train/train_mem.py \
+#     --deepspeed scripts/zero1.json \
+
+ACCELERATE_CPU_AFFINITY=1 torchrun --nproc_per_node=${NUM_GPU} \
+    llava/train/train_mem.py \
+    --deepspeed scripts/zero2.json \
     --model_name_or_path ${LLM_VERSION} \
     --version ${PROMPT_VERSION} \
     --data_path ${DATA_VERSION} \
     --vision_tower ${VISION_MODEL_VERSION} \
-    --pretrain_mm_mlp_adapter="Your_stage_checkpoint_path/mm_projector.bin" \
+    --pretrain_mm_mlp_adapter="checkpoints/stage1-init_connector/stage1-umt-hd-large-tome16_mlp_hd64-Qwen2_5_1_5B_stage1_init_connector_iv1m.yaml_plain_20250307_055129/mm_projector.bin" \
     --mm_tunable_parts="mm_vision_tower,mm_mlp_adapter,mm_language_model" \
     --mm_vision_tower_lr=2e-6 \
     --mm_vision_select_layer -2 \
@@ -54,7 +60,7 @@ srun -p ${PARTITION} \
     --gradient_accumulation_steps 8 \
     --evaluation_strategy "no" \
     --save_strategy "steps" \
-    --save_steps 12000 \
+    --save_steps 2000 \
     --save_total_limit 1 \
     --learning_rate 1e-5 \
     --weight_decay 0. \

@@ -1160,7 +1160,7 @@ class Qwen2Model_Flash(Qwen2PreTrainedModel):
         self, cur_num, rank_layer, features ,
         position_ids, attention_mask, labels
     ):
-
+        # print('!!!!!! FLASH RANK DROP !!!!!!!')
         if self.llm_compress_type == 'uniform0_attention':
             if cur_num == 0:
                 llm_compress_type = 'uniform'

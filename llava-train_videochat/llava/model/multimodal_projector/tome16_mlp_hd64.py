@@ -140,7 +140,7 @@ class ToMe16_mlp_hd64(nn.Module):
 
 
 
-    def forward(self, x, compress=False, local_num_frames=-1):
+    def forward(self, x, compress=False, local_num_frames=-1, condenser=None):
 
         height = width = self.hw
         assert height * width == x.shape[1]
@@ -157,10 +157,19 @@ class ToMe16_mlp_hd64(nn.Module):
                 num_frames = x.shape[0]
                 x = x.reshape(1, -1, x.shape[-1])
             num_tome_tokens = 16 * num_frames
+            import os
+            outer_stride = int(os.environ.get("EXTRA_PARAM_OUTER_STRIDE", '1'))
+            num_tome_tokens *= outer_stride
         else:
             num_tome_tokens = 64
         
         x = self.merge_tokens(x, target_num_token=num_tome_tokens)
+        
+        if compress:
+            if outer_stride > 1:
+                # condenser model: (N, T, C) -> (N, T//outer_stride, C)
+                x = condenser(x)
+        
         x = self.mlp(x)
 
         return x

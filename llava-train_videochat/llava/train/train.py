@@ -1150,7 +1150,8 @@ class LazySupervisedDataset(Dataset):
                     if ":" in sampling_strategy:
                         sampling_strategy, sampling_number = sampling_strategy.split(":")
                         if "%" in sampling_number:
-                            sampling_number = math.ceil(int(sampling_number.split("%")[0]) * len(cur_data_dict) / 100)
+                            # sampling_number = math.ceil(int(sampling_number.split("%")[0]) * len(cur_data_dict) / 100)
+                            sampling_number = math.ceil(float(sampling_number.split("%")[0]) * len(cur_data_dict) / 100)
                         else:
                             sampling_number = int(sampling_number)
 
@@ -1174,7 +1175,22 @@ class LazySupervisedDataset(Dataset):
                         raise NotImplementedError("Don't use random")
                         random.shuffle(cur_data_dict)
                         cur_data_dict = cur_data_dict[:sampling_number]
-
+                    
+                    # import pdb; pdb.set_trace()s
+                    # filter the data
+                    # good data: exactly one image or one video
+                    old_data_dict = cur_data_dict
+                    cur_data_dict = []
+                    for dt in old_data_dict:
+                        if (dt.get("image", None) is not None) + (dt.get("video", None) is not None) == 1:
+                            path = dt.get("image", dt.get("video"))
+                            if isinstance(path, list):
+                                pass
+                            else:
+                                cur_data_dict.append(dt)
+                    rank0_print(f"Filter data: {len(old_data_dict)} -> {len(cur_data_dict)}")
+                    if len(cur_data_dict) == 0:
+                        continue
 
                     video_read_type = dataset.get("video_read_type", None)
                     data_root = dataset.get("data_root", "")
@@ -1211,7 +1227,7 @@ class LazySupervisedDataset(Dataset):
 
                     if media_type not in ['text', 'mix'] and video_read_type != 'fake':
                         ok = False
-                        for i in range(3):
+                        for i in range(min(3, len(cur_data_dict))):
                             data_path = cur_data_dict[i][media_type]
                             if type(data_path) is list:
                                 data_path = data_path[0]
@@ -1229,6 +1245,8 @@ class LazySupervisedDataset(Dataset):
                             else:
                                 if os.path.exists(data_path):
                                     ok = True
+                                else:
+                                    print(f"File not found: {data_path}")
                             if ok:
                                 break
 
@@ -1294,7 +1312,10 @@ class LazySupervisedDataset(Dataset):
                 with io.BytesIO(img_bytes) as buff:
                     image = Image.open(buff).convert('RGB')
             else:
-                image = Image.open(image_file).convert('RGB')  # PIL Image
+                try:
+                    image = Image.open(image_file).convert('RGB')  # PIL Image
+                except:
+                    image = Image.open(image_file.replace('.png', '.jpg')).convert('RGB')  # PIL Image
         except Exception as exn:
             print(f"Failed to open image {image_file}. Exception:", exn)
             raise exn
@@ -1441,6 +1462,7 @@ class LazySupervisedDataset(Dataset):
 
         try:
             sample = self._get_item(i)
+            print(sample)
             return sample
         except Exception as e:
             raise e
@@ -1453,9 +1475,11 @@ class LazySupervisedDataset(Dataset):
             raise NotImplementedError(i)
         assert len(sources) == 1, "Don't know why it is wrapped to a list"  # FIXME
 
+        extra_dict = {}
 
         if "image" in sources[0]:
             image_file = self.list_data_dict[i]["image"]
+            extra_dict["image_file"] = image_file
 
             if type(image_file) is list:
                 # Handling multi images
@@ -1472,6 +1496,7 @@ class LazySupervisedDataset(Dataset):
 
         elif "video" in sources[0]:
             video_file = self.list_data_dict[i]["video"]
+            extra_dict["video_file"] = video_file
 
             try:
                 video, time_msg = self.process_video(video_file, data_anno=self.list_data_dict[i], data_args=self.data_args)
@@ -1488,6 +1513,9 @@ class LazySupervisedDataset(Dataset):
                         # image = process_anyres_video(video, self.data_args.image_processor, self.data_args.frame_grid_pinpoints)
                 else:
                     image = processor.preprocess(video, return_tensors="pt")["pixel_values"]
+
+                # if True:
+                #     print(f"video_file={video_file}, image.shape={image.shape}")
 
                 image = [(image, video[0].shape[0:2], "video")]
                 # sources = preprocess_multimodal(copy.deepcopy([e["conversations"] for e in sources]), self.data_args, msg=time_msg)
@@ -1511,6 +1539,9 @@ class LazySupervisedDataset(Dataset):
 
         if isinstance(i, int):
             data_dict = dict(input_ids=data_dict["input_ids"][0], labels=data_dict["labels"][0])
+        
+        for o in extra_dict:
+            data_dict[o] = extra_dict[o]
 
         # image exist in the data
         if "image" in self.list_data_dict[i]:
@@ -2043,6 +2074,18 @@ def train(attn_implementation=None):
                 for name, param in model.named_parameters():
                     if "vision_tower" not in name and "mm_projector" not in name and "vision_resampler" not in name:
                         param.requires_grad_(True)
+            if "mm_condenser" in tunable_parts:
+                try:
+                    for p in model.condenser.parameters():
+                        p.requires_grad = True
+                    print('*' * 80)
+                    print(model.condenser)
+                    print('*' * 80)
+                except:
+                    print('*' * 80)
+                    print('[Warning]    No condenser in the model')
+                    print('*' * 80)
+                import time; time.sleep(5)
 
         total_params = sum(p.ds_numel if hasattr(p, "ds_numel") else p.numel() for p in model.parameters())
         trainable_params = sum(p.ds_numel if hasattr(p, "ds_numel") else p.numel() for p in model.parameters() if p.requires_grad)

@@ -55,6 +55,35 @@ class LlavaQwenForCausalLM(Qwen2ForCausalLM, LlavaMetaForCausalLM):
         self.model = LlavaQwenModel(config)
         self.lm_head = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
         # Initialize weights and apply final processing
+
+        import os 
+        OUTER_CONDENSER = os.environ.get('EXTRA_PARAM_OUTER_CONDENSER_TYPE', None)
+        OUTER_LAYERS = int(os.environ.get('EXTRA_PARAM_OUTER_CONDENSER_LAYER', '0'))
+        INNER_CONDENSER = os.environ.get('EXTRA_PARAM_INNER_CONDENSER_TYPE', None)
+        INNER_LAYERS = int(os.environ.get('EXTRA_PARAM_INNER_CONDENSER_LAYER', '0'))
+
+        print("It is LlavaQwenForCausalLM")
+        # import pdb; pdb.set_trace()
+        from llava.model.condenser_arch import SelfAttentionCondenser, AvgPoolingCondenser, TransformerCondenser, RemoveFirstFrameCondenser, IdentityCondenser, SelectTheNextHalf, StupidPooling
+
+        if OUTER_CONDENSER is not None:
+            if OUTER_CONDENSER == 'rotary':
+                self.condenser = SelfAttentionCondenser(hidden_size=1024, num_layers=OUTER_LAYERS, position_embedding_type='rotary')
+            else:
+                assert False, "Unsupported condenser type"
+        else:
+            self.condenser = IdentityCondenser()
+        
+        if INNER_CONDENSER is not None:
+            inner_condense_layers = eval(os.environ.get("EXTRA_PARAM_INNER_CONDENSER_ID", "[]"))
+            if INNER_CONDENSER == 'rotary':
+                layer_list = [SelfAttentionCondenser(hidden_size=config.hidden_size, num_layers=INNER_LAYERS, position_embedding_type='rotary') for _ in inner_condense_layers]
+            elif INNER_CONDENSER == 'avgpool':
+                layer_list = [AvgPoolingCondenser(hidden_size=config.hidden_size, num_layers=INNER_LAYERS) for _ in inner_condense_layers]
+            else:
+                assert False, "Unsupported inner condenser type"
+            self.condenser.inner = nn.ModuleList(layer_list)
+
         self.post_init()
 
     def get_model(self):
@@ -82,6 +111,14 @@ class LlavaQwenForCausalLM(Qwen2ForCausalLM, LlavaMetaForCausalLM):
         # print("images[0].shape:", images[0].shape)
         if inputs_embeds is None:
             (input_ids, position_ids, attention_mask, past_key_values, inputs_embeds, labels) = self.prepare_inputs_labels_for_multimodal(input_ids, position_ids, attention_mask, past_key_values, labels, images, modalities, image_sizes)
+
+        # print('!!!! VANILLA FORWARD !!!!')
+
+        # import pdb; pdb.set_trace()
+        # print("inputs_embeds.shape:", inputs_embeds.shape)
+        # print("  Current GPU memory usage:", torch.cuda.memory_allocated() / 1024 / 1024 / 1024, "GB")
+        # print("  Max GPU memory usage:", torch.cuda.max_memory_allocated() / 1024 / 1024 / 1024, "GB")
+        print(f"Shape {inputs_embeds.shape},  usage (cur/max): {torch.cuda.memory_allocated() / 1024 / 1024 / 1024:.2f} / {torch.cuda.max_memory_allocated() / 1024 / 1024 / 1024:.2f} GB")
 
         # print("inputs_embeds.shape:", inputs_embeds.shape)
         if dpo_forward:
@@ -113,6 +150,7 @@ class LlavaQwenForCausalLM(Qwen2ForCausalLM, LlavaMetaForCausalLM):
                 output_attentions=output_attentions,
                 output_hidden_states=output_hidden_states,
                 return_dict=return_dict,
+                condenser=self.condenser,
             )
 
     @torch.no_grad()
@@ -145,6 +183,81 @@ class LlavaQwenForCausalLM(Qwen2ForCausalLM, LlavaMetaForCausalLM):
         if image_sizes is not None:
             inputs["image_sizes"] = image_sizes
         return inputs
+    
+    @torch.no_grad()
+    def chat(self,
+        video_path,
+        tokenizer,
+        user_prompt,
+        chat_history=None,
+        return_history=True,
+        max_num_frames=512,
+        media_dict=None,
+        generation_config={}):
+
+        frames, time_msg  = load_video(video_path, max_num_frames=max_num_frames, media_dict=media_dict)
+
+        image_sizes = [frames[0].shape[:2]]
+
+        frames = [self.get_vision_tower().image_processor.preprocess(frames, return_tensors="pt")["pixel_values"].to(self.model.dtype).cuda()]
+
+        conv = conv_templates["qwen_2"].copy()
+
+        if chat_history is None or len(chat_history) == 0:
+            user_prompt = f'{DEFAULT_IMAGE_TOKEN}\n{time_msg.strip()} {user_prompt}'
+        else:
+            assert DEFAULT_IMAGE_TOKEN in chat_history[0]['content'], chat_history
+            for msg in chat_history:
+                conv.append_message(msg['role'], msg['content'])
+        
+        conv.append_message(conv.roles[0], user_prompt)
+        conv.append_message(conv.roles[1], None)
+
+        prompt = conv.get_prompt()
+
+        input_ids = tokenizer_image_token(prompt, tokenizer, IMAGE_TOKEN_INDEX, return_tensors="pt").unsqueeze(0).cuda()
+
+        if tokenizer.pad_token_id is None:
+            if "qwen" in tokenizer.name_or_path.lower():
+                print("Setting pad token to bos token for qwen model.")
+                tokenizer.pad_token_id = 151643
+
+        attention_masks = input_ids.ne(tokenizer.pad_token_id).long().cuda()
+
+        stop_str = conv.sep if conv.sep_style != SeparatorStyle.TWO else conv.sep2
+        keywords = [stop_str]
+        stopping_criteria = KeywordsStoppingCriteria(keywords, tokenizer, input_ids)
+        
+        with torch.inference_mode():
+            output_ids = self.generate(
+                inputs=input_ids,
+                images=frames,
+                attention_mask=attention_masks,
+                modalities=["video"],
+                image_sizes=image_sizes,
+                use_cache=True,
+                stopping_criteria=[stopping_criteria],
+                **generation_config
+            )
+
+        outputs = tokenizer.batch_decode(output_ids, skip_special_tokens=True)[0].strip()
+        if outputs.endswith(stop_str):
+            outputs = outputs[: -len(stop_str)]
+
+        outputs = outputs.strip()
+
+        # print(f"\033[91m== Question: \033[0m\n{prompt}\n")
+        # print(f"\033[91m== Response: \033[0m\n{outputs}\n")
+        
+        if chat_history is None:
+            chat_history = []
+
+        chat_history.append({"role":conv.roles[0], "content":user_prompt})
+        chat_history.append({"role":conv.roles[1], "content":outputs})
+        if return_history:
+            return outputs, chat_history
+        else:
+            return outputs
 
 
 AutoConfig.register("llava_qwen", LlavaQwenConfig)

@@ -16,13 +16,13 @@ import io
 
 
 DATA_LIST = {
-    "4_count": "your_eval_data_dir/MVLU/MLVU/video/4_count",
-    "3_ego": "your_eval_data_dir/MVLU/MLVU/video/3_ego",
-    "2_needle": "your_eval_data_dir/MVLU/MLVU/video/2_needle",
-    "5_order": "your_eval_data_dir/MVLU/MLVU/video/5_order",
-    "1_plotQA": "your_eval_data_dir/MVLU/MLVU/video/1_plotQA",
-    "6_anomaly_reco": "your_eval_data_dir/MVLU/MLVU/video/6_anomaly_reco",
-    "7_topic_reasoning": "your_eval_data_dir/MVLU/MLVU/video/7_topic_reasoning"
+    "4_count": "benchmark_data/MVLU/MLVU/video/4_count",
+    "3_ego": "benchmark_data/MVLU/MLVU/video/3_ego",
+    "2_needle": "benchmark_data/MVLU/MLVU/video/2_needle",
+    "5_order": "benchmark_data/MVLU/MLVU/video/5_order",
+    "1_plotQA": "benchmark_data/MVLU/MLVU/video/1_plotQA",
+    "6_anomaly_reco": "benchmark_data/MVLU/MLVU/video/6_anomaly_reco",
+    "7_topic_reasoning": "benchmark_data/MVLU/MLVU/video/7_topic_reasoning"
 }
 
 # hf_home = os.getenv("HF_HOME", "./~/.cache/huggingface")
