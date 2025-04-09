@@ -4,19 +4,19 @@ export TORCH_CUDNN_USE_HEURISTIC_MODE_B=1
 
 # Most Important Part
 STAGE_ID="1"
-EXP_NAME="vanilla"
-DATA_VERSION="data/stage1_init_connector_iv1m.yaml"
+EXP_NAME="extreme"
+DATA_VERSION="data/reversed/stage1_init_connector_iv1m_rev.yaml"
 #--------------------
 
 # Hyperparameters
 export EXTRA_PARAM_OUTER_CONDENSER_TYPE="rotary"
+export EXTRA_PARAM_OUTER_CONDENSER_FORWARD_TYPE="spatial_temporal"
 export EXTRA_PARAM_OUTER_CONDENSER_LAYER="4"
-export EXTRA_PARAM_INNER_CONDENSER_ID="[4, 16]"
-export EXTRA_PARAM_INNER_CONDENSER_TYPE="avgpool"
-export EXTRA_PARAM_INNER_CONDENSER_LAYER="2"
+export EXTRA_PARAM_INNER_CONDENSER_ID="[10, 20]"
+export EXTRA_PARAM_INNER_CONDENSER_TYPE="nexthalf"
 
 export EXTRA_PARAM_OUTER_STRIDE="4"
-export EXTRA_PARAM_INNER_STRIDE="2"
+export EXTRA_PARAM_INNER_STRIDE="7"
 #--------------------
 
 DATA_VERSION_CLEAN=$(basename "$DATA_VERSION")
@@ -47,9 +47,9 @@ if [ -d "${CHECKPOINT_DIR}" ]; then
 fi
 
 mkdir -p ${CHECKPOINT_DIR}/logs
-NUM_GPU=2
+NUM_GPU=4
 
-ACCELERATE_CPU_AFFINITY=1 torchrun --nproc_per_node=${NUM_GPU} \
+CUDA_VISIBLE_DEVICES=4,5,6,7 ACCELERATE_CPU_AFFINITY=1 torchrun --nproc_per_node=${NUM_GPU} --master_port=29501 \
     llava/train/train_mem.py \
     --deepspeed scripts/zero1.json \
     --model_name_or_path ${LLM_VERSION} \
@@ -67,10 +67,10 @@ ACCELERATE_CPU_AFFINITY=1 torchrun --nproc_per_node=${NUM_GPU} \
     --num_train_epochs 1 \
     --per_device_train_batch_size 16 \
     --per_device_eval_batch_size 4 \
-    --gradient_accumulation_steps 4 \
+    --gradient_accumulation_steps 2 \
     --evaluation_strategy "no" \
     --save_strategy "steps" \
-    --save_steps 100 \
+    --save_steps 500 \
     --save_total_limit 1 \
     --learning_rate 1e-4 \
     --weight_decay 0. \
@@ -84,7 +84,7 @@ ACCELERATE_CPU_AFFINITY=1 torchrun --nproc_per_node=${NUM_GPU} \
     --lazy_preprocess True \
     --report_to tensorboard \
     --attn_implementation flash_attention_2 \
-    --frames_upbound 4 \
+    --frames_upbound 8 \
     --time_msg short \
     --local_num_frames 4 \
     --sample_type middle \

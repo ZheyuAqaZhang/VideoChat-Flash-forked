@@ -141,7 +141,6 @@ class ToMe16_mlp_hd64(nn.Module):
 
 
     def forward(self, x, compress=False, local_num_frames=-1, condenser=None):
-
         height = width = self.hw
         assert height * width == x.shape[1]
         dtype = x.dtype
@@ -156,21 +155,46 @@ class ToMe16_mlp_hd64(nn.Module):
             else:
                 num_frames = x.shape[0]
                 x = x.reshape(1, -1, x.shape[-1])
-            num_tome_tokens = 16 * num_frames
+            
             import os
-            outer_stride = int(os.environ.get("EXTRA_PARAM_OUTER_STRIDE", '1'))
-            num_tome_tokens *= outer_stride
+            if os.environ.get('EXTRA_PARAM_OUTER_CONDENSER_TYPE', None) is not None:
+                x = condenser(x)
+            else:
+                num_tome_tokens = 16 * num_frames
+                x = self.merge_tokens(x, target_num_token=num_tome_tokens)
+            
+            # num_tome_tokens = 16 * num_frames
+            # import os
+            # outer_stride = int(os.environ.get("EXTRA_PARAM_OUTER_STRIDE", '1'))
+            # num_tome_tokens *= outer_stride
         else:
             num_tome_tokens = 64
+            assert 'not implemented yet'
         
-        x = self.merge_tokens(x, target_num_token=num_tome_tokens)
+        # x = self.merge_tokens(x, target_num_token=num_tome_tokens)
+        #
+        # if compress:
+        #     if outer_stride > 1:
+        #         # condenser model: (N, T, C) -> (N, T//outer_stride, C)
+        #         x = condenser(x)
         
-        if compress:
-            if outer_stride > 1:
-                # condenser model: (N, T, C) -> (N, T//outer_stride, C)
-                x = condenser(x)
-        
+
         x = self.mlp(x)
+
+         
+        if hasattr(condenser, 'learnable_token_stride'):
+            '''
+            add learnable token after each learnable_token_stride tokens with learnable_token (nn.Parameter(torch.randn(1, config.hidden_size)))
+            for example, if learnable_token_stride=4
+            token [0,1,2,3,4,5,6,7] -> [0,1,2,3,learnable_token,4,5,6,7,learnable_token]
+            '''
+            stride = condenser.learnable_token_stride
+            learnable_token = condenser.learnable_token
+            tokens = []
+            for i in range(0, x.shape[1], stride):
+                tokens.append(x[:, i:i + stride, :])
+                tokens.append(learnable_token.expand(x.shape[0], -1, -1))
+            x = torch.cat(tokens, dim=1)
 
         return x
 

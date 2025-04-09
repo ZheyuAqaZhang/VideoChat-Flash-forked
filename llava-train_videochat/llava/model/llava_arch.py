@@ -349,7 +349,8 @@ class LlavaMetaForCausalLM(ABC):
                 
                 vid_idx += 1
             else:
-                feat = self.get_model().mm_projector(images_features[img_idx], compress=False)
+                # feat = self.get_model().mm_projector(images_features[img_idx], compress=False)
+                feat = self.get_model().mm_projector(images_features[img_idx], compress=True, local_num_frames=1, condenser=self.condenser)
                 img_idx += 1
 
             all_videos_or_images_features.append(feat)
@@ -661,9 +662,13 @@ class LlavaMetaForCausalLM(ABC):
             self.model.llm_compress_layer_list = eval(os.environ.get("EXTRA_PARAM_INNER_CONDENSER_ID", "[]"))
             # self.model.llm_image_token_ratio_list = getattr(self.config, "llm_image_token_ratio_list", [1.0, 0.5, 0.25, 0.125])
             self.model.llm_image_token_ratio_list = [1.]
-            inner_stride = int(os.environ.get("EXTRA_PARAM_INNER_STRIDE", 1))
-            for o in self.model.llm_compress_layer_list:
-                self.model.llm_image_token_ratio_list.append(self.model.llm_image_token_ratio_list[-1] / inner_stride)
+            inner_stride = float(os.environ.get("EXTRA_PARAM_INNER_STRIDE", 1))
+            inner_stride_list = [inner_stride] * len(self.model.llm_compress_layer_list)
+            if 'EXTRA_PARAM_INNER_STRIDE_LIST' in os.environ:
+                inner_stride_list = eval(os.environ.get("EXTRA_PARAM_INNER_STRIDE_LIST", "[]"))
+            for in_st in inner_stride_list:
+                self.model.llm_image_token_ratio_list.append(self.model.llm_image_token_ratio_list[-1] / in_st)
+            # import pdb; pdb.set_trace()
             first_image_token_position = []
             text_prompt_lens = []
         else:

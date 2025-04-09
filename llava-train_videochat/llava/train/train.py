@@ -401,13 +401,16 @@ def preprocess_multimodal(sources: Sequence[str], data_args: DataArguments, msg=
     if not is_multimodal:
         return sources
 
+    import os
+    image_last = os.environ.get("EXTRA_PARAM_IMAGE_LAST", None)
+
     for source in sources:
         for sentence in source:
             # TODO maybe this should be changed for interleaved data?
             # if DEFAULT_IMAGE_TOKEN in sentence["value"] and not sentence["value"].startswith(DEFAULT_IMAGE_TOKEN):
             # only check for num_im=1
             num_im = len(re.findall(DEFAULT_IMAGE_TOKEN, sentence["value"]))
-            if num_im == 1 and DEFAULT_IMAGE_TOKEN in sentence["value"] and not sentence["value"].startswith(DEFAULT_IMAGE_TOKEN):
+            if (image_last is None) and (num_im == 1 and DEFAULT_IMAGE_TOKEN in sentence["value"] and not sentence["value"].startswith(DEFAULT_IMAGE_TOKEN)):
                 sentence["value"] = sentence["value"].replace(DEFAULT_IMAGE_TOKEN, "").strip()
                 sentence["value"] = DEFAULT_IMAGE_TOKEN + "\n" + sentence["value"]
                 sentence["value"] = sentence["value"].strip()
@@ -418,7 +421,17 @@ def preprocess_multimodal(sources: Sequence[str], data_args: DataArguments, msg=
                 replace_token = DEFAULT_IM_START_TOKEN + replace_token + DEFAULT_IM_END_TOKEN
 
             if msg.rstrip() != "":
-                replace_token = replace_token + msg.rstrip() + " " # NOTE for time msg of video
+                if image_last is None:
+                    replace_token = replace_token + msg.rstrip() + " "
+                elif image_last.strip().lower() == "middle":
+                    replace_token = replace_token + msg.rstrip()
+                elif image_last.strip().lower() == "true":
+                    replace_token = msg.rstrip() + " " + replace_token
+                else:
+                    raise ValueError(f"Unknown image_last value: {image_last}. Please set it to true or false.")
+            
+            # if msg.rstrip() != "":
+            #     import pdb; pdb.set_trace()
             
             sentence["value"] = sentence["value"].replace(DEFAULT_IMAGE_TOKEN, replace_token)
 
@@ -1016,7 +1029,7 @@ def preprocess(sources: Sequence[str], tokenizer: transformers.PreTrainedTokeniz
     4. Make a deepcopy as the target. Mask human words with IGNORE_INDEX.
     """
 
-
+    # import pdb; pdb.set_trace()
     if conversation_lib.default_conversation.sep_style == conversation_lib.SeparatorStyle.PLAIN:
         return preprocess_plain(sources, tokenizer)
     if conversation_lib.default_conversation.sep_style == conversation_lib.SeparatorStyle.LLAMA_2:
@@ -1049,7 +1062,7 @@ def preprocess(sources: Sequence[str], tokenizer: transformers.PreTrainedTokeniz
     else:
         conversations_tokenized = _tokenize_fn(conversations, tokenizer)
         input_ids = conversations_tokenized["input_ids"]
-
+    # import pdb; pdb.set_trace()
     targets = copy.deepcopy(input_ids)
     for target, source in zip(targets, sources):
         if has_image:
@@ -1619,6 +1632,14 @@ class DataCollatorForSupervisedDataset(object):
 def make_supervised_data_module(tokenizer: transformers.PreTrainedTokenizer, data_args) -> Dict:
     """Make dataset and collator for supervised fine-tuning."""
     train_dataset = LazySupervisedDataset(tokenizer=tokenizer, data_path=data_args.data_path, data_args=data_args)
+
+    # FLAG = True
+    # import random
+    # while FLAG:
+    #     idx = random.randint(0, len(train_dataset) - 1)
+    #     sample = train_dataset[idx]
+    #     # import pdb; pdb.set_trace()
+
     data_collator = DataCollatorForSupervisedDataset(tokenizer=tokenizer)
     return dict(train_dataset=train_dataset, eval_dataset=None, data_collator=data_collator)
 

@@ -64,7 +64,7 @@ class LlavaQwenForCausalLM(Qwen2ForCausalLM, LlavaMetaForCausalLM):
 
         print("It is LlavaQwenForCausalLM")
         # import pdb; pdb.set_trace()
-        from llava.model.condenser_arch import SelfAttentionCondenser, AvgPoolingCondenser, TransformerCondenser, RemoveFirstFrameCondenser, IdentityCondenser, SelectTheNextHalf, StupidPooling
+        from llava.model.condenser_arch import SelfAttentionCondenser, AvgPoolingCondenser, TransformerCondenser, RemoveFirstFrameCondenser, IdentityCondenser, SelectTheNextHalf, StupidPooling, SelectRowByRow
 
         if OUTER_CONDENSER is not None:
             if OUTER_CONDENSER == 'rotary':
@@ -74,12 +74,26 @@ class LlavaQwenForCausalLM(Qwen2ForCausalLM, LlavaMetaForCausalLM):
         else:
             self.condenser = IdentityCondenser()
         
+        learnable_token_stride = int(os.environ.get("EXTRA_PARAM_OUTER_LEARNABLE_TOKEN", 0))
+        if learnable_token_stride > 0:
+            self.condenser.learnable_token = nn.Parameter(torch.randn(1, config.hidden_size))
+            self.condenser.learnable_token_stride = learnable_token_stride
+
+        
         if INNER_CONDENSER is not None:
             inner_condense_layers = eval(os.environ.get("EXTRA_PARAM_INNER_CONDENSER_ID", "[]"))
             if INNER_CONDENSER == 'rotary':
                 layer_list = [SelfAttentionCondenser(hidden_size=config.hidden_size, num_layers=INNER_LAYERS, position_embedding_type='rotary') for _ in inner_condense_layers]
             elif INNER_CONDENSER == 'avgpool':
                 layer_list = [AvgPoolingCondenser(hidden_size=config.hidden_size, num_layers=INNER_LAYERS) for _ in inner_condense_layers]
+            elif INNER_CONDENSER == 'rowbyrow':
+                layer_list = [SelectRowByRow() for _ in inner_condense_layers]
+            elif INNER_CONDENSER == 'nexthalf':
+                if 'EXTRA_PARAM_INNER_STRIDE_LIST' in os.environ:
+                    inner_strids = eval(os.environ.get("EXTRA_PARAM_INNER_STRIDE_LIST", "[]"))
+                    layer_list = [SelectTheNextHalf(stride=st) for st in inner_strids]
+                else:
+                    layer_list = [SelectTheNextHalf() for _ in inner_condense_layers]
             else:
                 assert False, "Unsupported inner condenser type"
             self.condenser.inner = nn.ModuleList(layer_list)

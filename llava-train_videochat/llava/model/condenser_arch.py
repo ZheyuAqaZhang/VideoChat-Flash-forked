@@ -195,6 +195,8 @@ class SelfAttentionCondenser(nn.Module):
         if position_embedding_type == "hier":
             self.segment_embeddings = nn.Parameter(torch.randn(4, hidden_size))
         
+        self.forward_style = os.environ.get('EXTRA_PARAM_OUTER_CONDENSER_FORWARD_TYPE', 'None')
+
         self._init_weights()
         self.pos_encoding_cache = None  # Cache for positional encoding
 
@@ -252,19 +254,68 @@ class SelfAttentionCondenser(nn.Module):
         # print('after pos embedding', x.shape, x.norm())
         return x
 
-    def forward(self, x):
-        x = x.permute(1, 0, 2)  # [seq_len, batch_size, hidden_size]
+    def forward(self, x, wh=28):
+        spatial_temporal = 'spatial_temporal' in self.forward_style
 
-        if self.position_embedding_type is not None and self.position_embedding_type != "rotary":
-            x = self._apply_position_embedding(x)
+        if not spatial_temporal:
+            x = x.permute(1, 0, 2)  # [seq_len, batch_size, hidden_size]
 
-        for layer in self.layers:
-            x = layer(x)
+            if self.position_embedding_type is not None and self.position_embedding_type != "rotary":
+                x = self._apply_position_embedding(x)
 
-        x = x.permute(1, 2, 0)  # [batch_size, hidden_size, seq_len]
-        x = self.pool(x)  # [batch_size, hidden_size, seq_len//4]
-        x = x.permute(0, 2, 1)  # [batch_size, seq_len//4, hidden_size]
+            for layer in self.layers:
+                x = layer(x)
 
+            x = x.permute(1, 2, 0)  # [batch_size, hidden_size, seq_len]
+            x = self.pool(x)  # [batch_size, hidden_size, seq_len//4]
+            x = x.permute(0, 2, 1)  # [batch_size, seq_len//4, hidden_size]
+        else:
+            # x: [batch_size, seq_len, hidden_size]
+            b, t, c = x.size()
+            assert t % (wh * wh) == 0, f"seq_len {t} should be divisible by {wh * wh}"
+            n_frames = t // (wh * wh)
+            n_layers = len(self.layers)
+            assert n_layers % 2 == 0, f"n_layers {n_layers} should be divisible by 2"
+            
+            '''
+            Step 1: Spatial Condense
+                use first half of layers, process each frame separately (batch_size * n_frames, wh * wh, hidden_size)
+                avgpool (take average) of 4x4 patches to get 7x7 patches
+                (batch_size * n_frames, 7 * 7, hidden_size)
+            Step 2: Temporal Condense
+                use second half of layers, process all frames together (batch_size, n_frames * 7 * 7, hidden_size)
+                avgpool (take average) of n_frames frames to get 1 frame
+                (batch_size, 7 * 7, hidden_size)
+            '''
+            # Reshape to group the frames; we get [b*n_frames, wh*wh, c]
+            x = x.reshape(b * n_frames, wh * wh, c)  # shape => [b*n_frames, wh*wh, hidden_size]
+            
+            x = x.permute(1, 0, 2)
+
+            # Apply the first half of the layers
+            for layer in self.layers[: (n_layers // 2)]:
+                x = layer(x)
+
+            x = x.permute(1, 2, 0)  # => [b*n_frames, c, wh*wh]
+
+            x = x.reshape(b * n_frames, c, wh, wh)   # [b*n_frames, c, 28, 28]
+            x = F.avg_pool2d(x, kernel_size=4, stride=4)  # => [b*n_frames, c, 7, 7]
+            x = x.reshape(b * n_frames, c, 7 * 7)    # => [b*n_frames, c, 49]
+            x = x.permute(0, 2, 1)                # => [b*n_frames, 49, c]
+
+            x = x.reshape(b, n_frames * 49, c)  # [b, n_frames*49, c]
+            
+            x = x.permute(1, 0, 2)  # => [n_frames*49, b, c]
+
+            for layer in self.layers[(n_layers // 2):]:
+                x = layer(x)
+
+            # Permute back => [b, n_frames*49, c]
+            x = x.permute(1, 0, 2)
+
+            x = x.reshape(b, n_frames, 49, c)  # => [b, n_frames, 49, c]
+            x = x.mean(dim=1)               # => [b, 49, c]
+        
         return x
 
 class RemoveFirstFrameCondenser(nn.Module):
@@ -282,13 +333,37 @@ class IdentityCondenser(nn.Module):
         return x
 
 class SelectTheNextHalf(nn.Module):
-    def __init__(self):
+    def __init__(self, stride=None):
         super(SelectTheNextHalf, self).__init__()
-        self.stride = 13*14
-        self.fake_parameter = nn.Parameter(torch.zeros(1))
+        self.stride = stride
+        if stride is None:
+            self.stride = int(os.environ.get('EXTRA_PARAM_INNER_STRIDE', '2'))
 
     def forward(self, x):
-        return x[:, x.size(1)//2:, :]
+        # for every self.stride tokens, select the last one
+        # x: [batch_size, seq_len, hidden_size]
+        b, t, c = x.size()
+        assert t % self.stride == 0, f"seq_len {t} should be divisible by stride {self.stride}"
+        x = x.reshape(b, t // self.stride, self.stride, c)
+        x = x[:, :, -1, :]
+        x = x.reshape(b, -1, c)
+        return x
+
+
+class SelectRowByRow(nn.Module):
+    def __init__(self):
+        super(SelectRowByRow, self).__init__()
+
+    def forward(self, x):
+        # x: [batch_size, seq_len, hidden_size]
+        b, t, c = x.size()
+        assert t % 7 == 0, f"seq_len {t} should be divisible by 7"
+        # for each adjacent 7 tokens 1~7, select 1 3 5 7
+        # your code here
+        x = x.view(b, t // 7, 7, c)
+        x = x[:, :, [0, 2, 4, 6], :]
+        x = x.view(b, -1, c)
+        return x
 
 class StupidPooling(nn.Module):
     def __init__(self):

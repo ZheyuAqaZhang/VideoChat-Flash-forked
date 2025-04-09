@@ -4,19 +4,19 @@ export TORCH_CUDNN_USE_HEURISTIC_MODE_B=1
 
 # Most Important Part
 STAGE_ID="2"
-EXP_NAME="vanilla"
-DATA_VERSION="data/stage2_short_pretrain_iv6m_small.yaml"
+EXP_NAME="extreme"
+DATA_VERSION="data/reversed/stage2_short_pretrain_iv6m_rev_mid.yaml"
 #--------------------
 
 # Hyperparameters
 export EXTRA_PARAM_OUTER_CONDENSER_TYPE="rotary"
+export EXTRA_PARAM_OUTER_CONDENSER_FORWARD_TYPE="spatial_temporal"
 export EXTRA_PARAM_OUTER_CONDENSER_LAYER="4"
-export EXTRA_PARAM_INNER_CONDENSER_ID="[4, 16]"
-export EXTRA_PARAM_INNER_CONDENSER_TYPE="avgpool"
-export EXTRA_PARAM_INNER_CONDENSER_LAYER="2"
+export EXTRA_PARAM_INNER_CONDENSER_ID="[10, 20]"
+export EXTRA_PARAM_INNER_CONDENSER_TYPE="nexthalf"
 
 export EXTRA_PARAM_OUTER_STRIDE="4"
-export EXTRA_PARAM_INNER_STRIDE="2"
+export EXTRA_PARAM_INNER_STRIDE="7"
 #--------------------
 
 DATA_VERSION_CLEAN=$(basename "$DATA_VERSION")
@@ -24,8 +24,8 @@ DATA_VERSION_CLEAN=$(basename "$DATA_VERSION")
 VISION_MODEL_VERSION="umt-hd-large"
 VISION_MODEL_VERSION_CLEAN="umt-hd-large"
 
-# LLM_VERSION="/home/ec2-user/workspace/VideoChat-Flash-forked/llava-train_videochat/checkpoints/baseline-umt-hd-large-tome16_mlp_hd64_Qwen2_5_1_5B"
-LLM_VERSION="/home/ec2-user/workspace/VideoChat-Flash-forked/llava-train_videochat/checkpoints/vanilla/stage1-umt-hd-large-tome16_mlp_hd64_Qwen2_5_1_5B_stage1_init_connector_iv1m.yaml"
+# LLM_VERSION="/home/ec2-user/workspace/VideoChat-Flash-forked/llava-train_videochat/checkpoints/spatial_temporal/stage1-umt-hd-large-tome16_mlp_hd64_Qwen2_5_1_5B_stage1_init_connector_iv1m.yaml"
+LLM_VERSION="/home/ec2-user/workspace/VideoChat-Flash-forked/llava-train_videochat/checkpoints/$EXP_NAME/stage1-umt-hd-large-tome16_mlp_hd64_Qwen2_5_1_5B_stage1_init_connector_iv1m_rev.yaml"
 LLM_VERSION_CLEAN="Qwen2_5_1_5B"
 
 mm_projector_type=tome16_mlp_hd64
@@ -50,14 +50,14 @@ fi
 mkdir -p ${CHECKPOINT_DIR}/logs
 NUM_GPU=4
 
-ACCELERATE_CPU_AFFINITY=1 torchrun --nproc_per_node=${NUM_GPU} \
+CUDA_VISIBLE_DEVICES=4,5,6,7 ACCELERATE_CPU_AFFINITY=1 torchrun --nproc_per_node=${NUM_GPU} --master_port=29501 \
     llava/train/train_mem.py \
     --deepspeed scripts/zero1.json \
     --model_name_or_path ${LLM_VERSION} \
     --version ${PROMPT_VERSION} \
     --data_path ${DATA_VERSION} \
     --vision_tower ${VISION_MODEL_VERSION} \
-    --mm_tunable_parts="mm_vision_tower,mm_mlp_adapter,mm_language_model,mm_condenser" \
+    --mm_tunable_parts="mm_mlp_adapter,mm_condenser" \
     --mm_vision_tower_lr=2e-6 \
     --mm_vision_select_layer -2 \
     --mm_projector_type ${mm_projector_type} \
@@ -70,10 +70,10 @@ ACCELERATE_CPU_AFFINITY=1 torchrun --nproc_per_node=${NUM_GPU} \
     --num_train_epochs 1 \
     --per_device_train_batch_size 8 \
     --per_device_eval_batch_size 4 \
-    --gradient_accumulation_steps 8 \
+    --gradient_accumulation_steps 2 \
     --evaluation_strategy "no" \
     --save_strategy "steps" \
-    --save_steps 100 \
+    --save_steps 500 \
     --save_total_limit 1 \
     --learning_rate 1e-5 \
     --weight_decay 0. \
@@ -90,7 +90,7 @@ ACCELERATE_CPU_AFFINITY=1 torchrun --nproc_per_node=${NUM_GPU} \
     --torch_compile_backend "inductor" \
     --dataloader_drop_last True \
     --attn_implementation flash_attention_2 \
-    --frames_upbound 8 \
+    --frames_upbound 16 \
     --time_msg short \
     --local_num_frames 4 \
     --vision_encode_type video_image \
@@ -148,3 +148,4 @@ ACCELERATE_CPU_AFFINITY=1 torchrun --nproc_per_node=${NUM_GPU} \
 # You can delete the sdpa attn_implementation if you want to use flash attn
 # Originally, frames_upbound was 512
 # attn_implementation was sdpa
+    # --mm_tunable_parts="mm_vision_tower,mm_mlp_adapter,mm_language_model,mm_condenser" \

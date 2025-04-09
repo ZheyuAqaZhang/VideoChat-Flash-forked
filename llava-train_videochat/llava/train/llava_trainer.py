@@ -370,6 +370,7 @@ class LLaVATrainer(Trainer):
                 lr_mapper["mm_projector"] = self.args.mm_projector_lr
             if self.args.mm_vision_tower_lr is not None:
                 lr_mapper["vision_tower"] = self.args.mm_vision_tower_lr
+                lr_mapper["condenser"] = self.args.mm_vision_tower_lr
             if len(lr_mapper) > 0:
                 special_lr_parameters = [name for name, _ in opt_model.named_parameters() if any(module_keyword in name for module_keyword in lr_mapper)]
                 optimizer_grouped_parameters = [
