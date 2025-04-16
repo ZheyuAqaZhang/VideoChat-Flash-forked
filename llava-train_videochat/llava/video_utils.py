@@ -109,9 +109,12 @@ def get_frame_indices(num_frames, vlen, sample='middle', fix_start=None, input_f
 
 
     if sample == 'dynamic_fps1':
+        
+        import os
+        fps = int(os.environ.get("EXTRA_PARAM_FPS", "1"))
 
         duration = float(vlen) / input_fps
-        num_segments = int(duration // local_num_frames)
+        num_segments = int(fps * duration // local_num_frames)
         if num_segments == 0:
             num_frames = local_num_frames
         else:
@@ -119,6 +122,10 @@ def get_frame_indices(num_frames, vlen, sample='middle', fix_start=None, input_f
 
         if max_num_frames > 0:
             num_frames = min(num_frames, max_num_frames)
+        
+        if num_frames > vlen:
+            num_frames = (vlen // local_num_frames) * local_num_frames
+
         sample = "middle" # NOTE
 
         # logger.info(f"? is OK (img), duation={duration} frames={num_frames}!!!!")

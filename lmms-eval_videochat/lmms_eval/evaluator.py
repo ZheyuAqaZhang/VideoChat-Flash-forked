@@ -102,6 +102,8 @@ def simple_evaluate(
     )
 
     task_dict = lmms_eval.tasks.get_task_dict(tasks, model_name=model)
+    # task_dict['lvbench_selfmedia'][1].dataset['train'][0]['video']
+    # import pdb; pdb.set_trace()
     for task_name in task_dict.keys():
         task_obj = task_dict[task_name]
         if type(task_obj) == tuple:
@@ -297,7 +299,11 @@ def evaluate(
                 cloned_reqs.extend([req] * req.repeats)
 
         # run requests through model
+        # import pdb; pdb.set_trace()
         resps = getattr(lm, reqtype)(cloned_reqs)  # Choiszt run generate until
+
+        # !!!!!!!!!!!!!!!!!!!!!!!!!!!
+        # import pdb; pdb.set_trace()
 
         # put responses from model into a list of length K for each request.
         for x, req in zip(resps, cloned_reqs):

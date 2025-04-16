@@ -1,7 +1,7 @@
 dataset_path: eval_data_jsons/LVBench
 dataset_kwargs:
   token: True
-  cache_dir: your_eval_data_dir/LVBench/frames/ # NOTE: we extract frames to avoid oom.
+  cache_dir: benchmark_data/lvbench_images_2048/ # NOTE: we extract frames to avoid oom.  # NOTE-v2: 我偏不 o.O
   video: True
 
 generation_kwargs:

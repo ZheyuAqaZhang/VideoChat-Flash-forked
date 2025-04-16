@@ -44,6 +44,11 @@ def lvbench_mc_doc_to_visual(doc, lmms_eval_specific_kwargs=None):
         media_dict = {'video_read_type': 'img'}
 
     print("video_path:", video_path)
+
+    if False: # !!!!!!!!!!!!!!
+        # import pdb; pdb.set_trace()
+        media_dict["video_read_type"] = 'decord'
+        video_path = f"{video_path}.mp4"
     
     return [video_path, media_dict]
 

@@ -1,7 +1,7 @@
 dataset_path:  eval_data_jsons/Video-MME
 dataset_kwargs:
   token: True
-  cache_dir: your_eval_data_dir/VideoMME_0629
+  cache_dir: benchmark_data/Video-MME/subtitle
   video: True
   # From_YouTube: True
 task: videomme_w_subtitle

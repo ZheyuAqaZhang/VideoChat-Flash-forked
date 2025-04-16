@@ -1,4 +1,5 @@
 import os, sys
+from functools import partial
 from typing import List, Union, Dict
 
 from lmms_eval import utils
@@ -105,6 +106,7 @@ def include_task_folder(task_dir: str, register_task: bool = True) -> None:
 
 
 def include_path(task_dir):
+    # import pdb; pdb.set_trace()
     include_task_folder(task_dir)
     # Register Benchmarks after all tasks have been added
     include_task_folder(task_dir, register_task=False)
@@ -125,6 +127,42 @@ def initialize_tasks(verbosity="INFO"):
 
 
 def get_task(task_name, model_name):
+    # !!!!!!!!!!!!!!!!!!!
+    if task_name.startswith("lvbench"):
+        ds = TASK_REGISTRY[task_name](model_name=model_name)
+        video_root = "./benchmark_data/lvbench_highres"
+
+        missing: set[str] = set()
+
+        def _has_video(example, root, miss_set):
+            name = example["video"]
+            path = os.path.join(root, name) + ".mp4"
+            if os.path.exists(path):
+                return True
+            miss_set.add(path)
+            return False
+
+        keep_fn = partial(_has_video, root=video_root, miss_set=missing)
+        before_cnt = {split: len(ds.dataset[split]) for split in ds.dataset}
+
+        for split in list(ds.dataset.keys()):
+            ds.dataset[split] = ds.dataset[split].filter(keep_fn)
+
+        after_cnt = {split: len(ds.dataset[split]) for split in ds.dataset}
+
+        print('*'*80)
+        print(f"[{task_name}]")
+        for split in before_cnt:
+            removed = before_cnt[split] - after_cnt[split]
+            print(f"[{split}] filtered out {removed}/{before_cnt[split]} examples.")
+        if missing:
+            print("Missing video files (unique):")
+            for path in sorted(missing):
+                print(f"  {path}")
+        else:
+            print("No missing video files found.")
+        print('*'*80)
+        return ds
     try:
         return TASK_REGISTRY[task_name](model_name=model_name)  # TODO choiszt the return result need to check " 'mmeConfigurableTask' object has no attribute '_instances'. Did you mean: 'instances'?"
     except KeyError:
